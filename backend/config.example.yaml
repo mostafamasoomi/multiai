@@ -1,0 +1,7 @@
+litellm:
+  model_list: []
+  general_settings:
+    max_budget: 0
+  router_settings:
+    fallback: []
+    enable_pre_call_checks: true

@@ -1,0 +1,7 @@
+fastapi>=0.111
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+redis>=5
+httpx
+pydantic>=2

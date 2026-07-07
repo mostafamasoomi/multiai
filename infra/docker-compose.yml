@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gateway
+      POSTGRES_PASSWORD: gateway
+      POSTGRES_DB: gateway
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+  litellm:
+    image: ghcr.io/berriai/litellm:stable-[VERIFY: litellm docs]
+    command: ["--config", "/app/config.yaml"]
+    volumes:
+      - ./backend/config.example.yaml:/app/config.yaml:ro
+    depends_on:
+      - db
+    restart: unless-stopped
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://gateway:gateway@db:5432/gateway
+      REDIS_URL: redis://redis:6379/0
+      LITELLM_HOST: http://litellm:4000
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN:-change-me}
+    depends_on:
+      - db
+      - redis
+      - litellm
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+volumes:
+  pgdata:
