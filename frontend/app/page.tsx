@@ -57,69 +57,87 @@ function MotionEffects() {
 
     gsap.registerPlugin(ScrollTrigger)
 
-    // Hero camera progress → vortex
-    gsap.to({}, {
-      scrollTrigger: {
-        trigger: '.motion-hero',
-        start: 'top top',
-        end: 'bottom top',
-        scrub: 1,
-        onUpdate: (self: any) => {
-          const p = self.progress
-          document.documentElement.style.setProperty('--scroll-progress', String(p))
-          if ((window as any).motionVortex) (window as any).motionVortex.setProgress(p)
-        },
-      },
-    })
-
-    // Hero content stagger entrance (RTL-aware)
-    gsap.from('.motion-hero-content > *', {
-      y: 50, opacity: 0, duration: 1, stagger: 0.15,
-      ease: 'power3.out', delay: 0.4,
-    })
-
-    // Sections reveal
-    document.querySelectorAll('.motion-section').forEach((el) => {
-      gsap.from(el, {
-        scrollTrigger: { trigger: el, start: 'top 88%' },
-        y: 50, opacity: 0, scale: 0.98, duration: 0.9, ease: 'power2.out',
-      })
-    })
-
-    // Feature cards stagger
-    document.querySelectorAll('.motion-feature-card').forEach((el, i) => {
-      gsap.from(el, {
-        scrollTrigger: { trigger: el.closest('.motion-features-grid'), start: 'top 85%' },
-        y: 30, opacity: 0, delay: i * 0.08, duration: 0.7, ease: 'power2.out',
-      })
-    })
-
-    // Stats count-up
-    document.querySelectorAll('.motion-stat-num').forEach((el) => {
-      const text = el.textContent
-      const target = parseFloat(text?.replace(/[^0-9.]/g, '') || '0') || 0
-      const suffix = text?.replace(/[0-9.]/g, '') || ''
-      gsap.from(el, {
-        scrollTrigger: { trigger: el.closest('.motion-stats'), start: 'top 85%' },
-        textContent: 0, duration: 1.2, ease: 'power2.out', snap: { textContent: 1 },
-        modifiers: {
-          textContent: (v: number) => {
-            const n = Math.round(v * target)
-            return n >= 1000 ? `${(n / 1000).toFixed(1)}k${suffix}` : `${n}${suffix}`
+    // All tweens/ScrollTriggers below are scoped to this context so ctx.revert()
+    // can fully undo them on cleanup — including plain (non-scrollTrigger) .from()
+    // tweens, which React 18 StrictMode's mount→unmount→mount dev cycle would
+    // otherwise leave stuck at their "from" state (e.g. an invisible hero).
+    const ctx = gsap.context(() => {
+      // Hero camera progress → vortex
+      gsap.to({}, {
+        scrollTrigger: {
+          trigger: '.motion-hero',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1,
+          onUpdate: (self: any) => {
+            const p = self.progress
+            document.documentElement.style.setProperty('--scroll-progress', String(p))
+            if ((window as any).motionVortex) (window as any).motionVortex.setProgress(p)
           },
         },
       })
-    })
 
-    // Pricing cards scale-in
-    document.querySelectorAll('.motion-pricing-card').forEach((el, i) => {
-      gsap.from(el, {
-        scrollTrigger: { trigger: el.closest('.motion-pricing-grid'), start: 'top 85%' },
-        y: 30, opacity: 0, scale: 0.95, delay: i * 0.1, duration: 0.7, ease: 'power2.out',
+      // Hero content stagger entrance (RTL-aware)
+      gsap.from('.motion-hero-content > *', {
+        y: 50, opacity: 0, duration: 1, stagger: 0.15,
+        ease: 'power3.out', delay: 0.4,
       })
+
+      // Sections reveal
+      document.querySelectorAll('.motion-section').forEach((el) => {
+        gsap.from(el, {
+          scrollTrigger: { trigger: el, start: 'top 88%' },
+          y: 50, opacity: 0, scale: 0.98, duration: 0.9, ease: 'power2.out',
+        })
+      })
+
+      // Feature cards stagger
+      document.querySelectorAll('.motion-feature-card').forEach((el, i) => {
+        gsap.from(el, {
+          scrollTrigger: { trigger: el.closest('.motion-features-grid'), start: 'top 85%' },
+          y: 30, opacity: 0, delay: i * 0.08, duration: 0.7, ease: 'power2.out',
+        })
+      })
+
+      // Stats count-up
+      document.querySelectorAll('.motion-stat-num').forEach((el) => {
+        const text = el.textContent
+        const target = parseFloat(text?.replace(/[^0-9.]/g, '') || '0') || 0
+        const suffix = text?.replace(/[0-9.]/g, '') || ''
+        gsap.from(el, {
+          scrollTrigger: { trigger: el.closest('.motion-stats'), start: 'top 85%' },
+          textContent: 0, duration: 1.2, ease: 'power2.out', snap: { textContent: 1 },
+          modifiers: {
+            textContent: (v: number) => {
+              const n = Math.round(v * target)
+              return n >= 1000 ? `${(n / 1000).toFixed(1)}k${suffix}` : `${n}${suffix}`
+            },
+          },
+        })
+      })
+
+      // Pricing cards scale-in
+      document.querySelectorAll('.motion-pricing-card').forEach((el, i) => {
+        gsap.from(el, {
+          scrollTrigger: { trigger: el.closest('.motion-pricing-grid'), start: 'top 85%' },
+          y: 30, opacity: 0, scale: 0.95, delay: i * 0.1, duration: 0.7, ease: 'power2.out',
+        })
+      })
+
+      // Scroll progress line
+      ScrollTrigger.create({
+        trigger: document.body,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: (self) => {
+          document.documentElement.style.setProperty('--scroll-progress', String(self.progress))
+        },
+      })
+
+      ScrollTrigger.refresh()
     })
 
-    // Pointer parallax (desktop only)
+    // Pointer parallax (desktop only) — plain DOM listener, not a GSAP tween
     const hero = document.querySelector('.motion-hero') as HTMLElement | null
     const onPointerMove = (e: PointerEvent) => {
       if (!hero || !matchMedia('(hover: hover) and (pointer: fine)').matches) return
@@ -130,21 +148,9 @@ function MotionEffects() {
     }
     window.addEventListener('pointermove', onPointerMove, { passive: true })
 
-    // Scroll progress line
-    ScrollTrigger.create({
-      trigger: document.body,
-      start: 'top top',
-      end: 'bottom bottom',
-      onUpdate: (self) => {
-        document.documentElement.style.setProperty('--scroll-progress', String(self.progress))
-      },
-    })
-
-    ScrollTrigger.refresh()
-
     return () => {
       window.removeEventListener('pointermove', onPointerMove)
-      ScrollTrigger.getAll().forEach((st) => st.kill())
+      ctx.revert()
     }
   }, [])
 
