@@ -83,8 +83,11 @@ function MotionEffects() {
         ease: 'power3.out', delay: 0.4,
       })
 
-      // Sections reveal
+      // Sections reveal. Skip any section containing a ScrollTrigger-pinned
+      // element: a transform on the ancestor makes it the containing block for
+      // the pin's fixed positioning, which breaks the pin.
       document.querySelectorAll('.motion-section').forEach((el) => {
+        if (el.querySelector('.cards-stage')) return
         gsap.from(el, {
           scrollTrigger: { trigger: el, start: 'top 88%' },
           y: 50, opacity: 0, scale: 0.98, duration: 0.9, ease: 'power2.out',

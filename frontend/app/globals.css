@@ -10,6 +10,7 @@
 @font-face { font-family:'Freigeist'; font-style:normal; font-weight:700; font-display:swap; src:url('/fonts/freigeist/Freigeist-Bold.woff2') format('woff2'); }
 @font-face { font-family:'PP Cirka'; font-style:normal; font-weight:300; font-display:swap; src:url('/fonts/cirka/PPCirka-Light.woff2') format('woff2'); }
 @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:400; font-display:swap; src:url('/fonts/jetbrains-mono/JetBrainsMono-Regular.woff2') format('woff2'); }
+@font-face { font-family:'Vazirmatn'; font-style:normal; font-weight:400; font-display:swap; src:url('/fonts/Vazirmatn-Regular.woff2') format('woff2'); }
 @font-face { font-family:'Vazirmatn'; font-style:normal; font-weight:500; font-display:swap; src:url('/fonts/Vazirmatn-Medium.woff2') format('woff2'); }
 @font-face { font-family:'Vazirmatn'; font-style:normal; font-weight:700; font-display:swap; src:url('/fonts/Vazirmatn-Bold.woff2') format('woff2'); }
 
@@ -27,10 +28,16 @@
   --radius: 12px;
   --radius-sm: 8px;
   --radius-pill: 100px;
-  --font-body: 'Freigeist', Georgia, serif;
-  --font-heading: 'PP Cirka', Baskerville, serif;
+  /* Persian-first type stack. Freigeist and PP Cirka are Latin-only faces with
+     no Persian glyphs — leading with them silently dropped every Persian
+     character to a generic serif fallback. Vazirmatn covers both scripts, so
+     mixed runs like "یک پلتفرم / GPT-4o" stay in one coherent face. */
+  --font-body: 'Vazirmatn', system-ui, sans-serif;
+  --font-heading: 'Vazirmatn', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-sans: 'Vazirmatn', 'Freigeist', system-ui, sans-serif;
+  --font-sans: 'Vazirmatn', system-ui, sans-serif;
+  /* Latin-only display face, for opt-in use on Latin runs (eyebrows, code tabs) */
+  --font-latin-display: 'PP Cirka', Baskerville, serif;
 }
 
 * { box-sizing: border-box; }
@@ -48,8 +55,11 @@ body {
 ::selection { background: rgba(192,132,252,0.2); color: var(--text); }
 
 /* ── Typography ──────────────────────────────────────────────────────────── */
-h1 { font-family: var(--font-heading); font-weight: 200; letter-spacing: -0.02em; line-height: 1.1; }
-h2, h3 { font-family: var(--font-heading); font-weight: 300; letter-spacing: -0.015em; line-height: 1.15; }
+/* Persian is a connected script: negative letter-spacing breaks joins, and the
+   200/300 weights these were set to don't exist in Vazirmatn (min 400), so they
+   rendered as an anaemic synthesized light. Display weight + roomier leading. */
+h1 { font-family: var(--font-heading); font-weight: 700; letter-spacing: 0; line-height: 1.35; }
+h2, h3 { font-family: var(--font-heading); font-weight: 700; letter-spacing: 0; line-height: 1.4; }
 code, pre { font-family: var(--font-mono); }
 
 /* ── Grain overlay ────────────────────────────────────────────────────────── */
@@ -77,7 +87,7 @@ code, pre { font-family: var(--font-mono); }
 .motion-engine-doors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 3rem; }
 .motion-engine-door { text-align: center; padding: 2rem 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--glass); transition: border-color 0.25s; }
 .motion-engine-door:hover { border-color: var(--accent); }
-.motion-engine-door h3 { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 300; margin: 0.75rem 0 0.5rem; }
+.motion-engine-door h3 { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; margin: 0.75rem 0 0.5rem; }
 .motion-engine-door p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
 @media (max-width: 768px) { .motion-engine-doors { grid-template-columns: 1fr; } }
 
@@ -85,7 +95,7 @@ code, pre { font-family: var(--font-mono); }
 .motion-pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 800px; margin: 3rem auto 0; }
 .motion-pricing-card { text-align: center; padding: 2rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--glass); transition: border-color 0.25s; }
 .motion-pricing-card.highlighted { border-color: var(--accent); background: rgba(192,132,252,0.05); }
-.motion-pricing-price { font-family: var(--font-heading); font-size: 3rem; font-weight: 300; margin: 1rem 0 0.5rem; line-height: 1; }
+.motion-pricing-price { font-family: var(--font-heading); font-size: 3rem; font-weight: 700; margin: 1rem 0 0.5rem; line-height: 1; }
 .motion-pricing-period { font-size: 1rem; color: var(--text-dim); }
 .motion-pricing-features { list-style: none; padding: 0; margin: 2rem 0; }
 .motion-pricing-features li { padding: 0.5rem 0; color: var(--text-muted); font-size: 0.9rem; border-bottom: 1px solid var(--border); }
@@ -130,29 +140,44 @@ code, pre { font-family: var(--font-mono); }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .motion-btn {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0px 28px; border-radius: 9999px;
-  font-size: 18.08px; font-weight: 400; text-decoration: none;
-  cursor: pointer; border: none; transition: background-color 0.2s, color 0.2s, transform 0.1s, box-shadow 0.2s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.85rem 1.85rem; border-radius: 9999px;
+  font-size: 1rem; font-weight: 700; text-decoration: none;
+  cursor: pointer; border: 1px solid transparent;
+  transition: background-color 0.2s, color 0.2s, transform 0.12s, box-shadow 0.25s, border-color 0.2s;
   font-family: var(--font-body);
+  white-space: nowrap;
 }
+/* The primary CTA was background: transparent with 0 vertical padding, making
+   the main conversion action on the page all but invisible. */
 .motion-btn-primary {
-  background: transparent; color: #fff;
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(124,58,237,0.35);
 }
-.motion-btn-primary:hover { background: rgba(255,255,255,0.08); }
+.motion-btn-primary:hover {
+  background: linear-gradient(135deg, #b975f9, #8b4bf0);
+  box-shadow: 0 10px 34px rgba(124,58,237,0.5);
+  transform: translateY(-2px);
+}
 .motion-btn-ghost {
-  background: transparent; color: rgb(120,122,145);
-  border: none;
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  border-color: var(--border-glass);
 }
-.motion-btn-ghost:hover { color: #fff; }
+.motion-btn-ghost:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(192,132,252,0.45);
+}
+.motion-btn-lg { padding: 1rem 2.4rem; font-size: 1.08rem; }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .motion-hero {
-  min-height: 110vh;
-  height: 110vh;
+  min-height: 100svh;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   position: relative; overflow: hidden;
-  padding: 79.2px 39.52px 0;
+  padding: 6rem 2.5rem 0;
 }
 .motion-vortex {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -169,6 +194,17 @@ code, pre { font-family: var(--font-mono); }
   text-align: center;
   padding: 0 2rem;
   display: flex; flex-direction: column; align-items: center;
+}
+/* Soft radial scrim: the 52k-particle field sits directly behind the copy and
+   was competing with it. Darkens just the text area without flattening the
+   surrounding vortex. */
+.motion-hero-content::before {
+  content: '';
+  position: absolute;
+  inset: -12% -18%;
+  background: radial-gradient(ellipse at center, rgba(3,3,14,0.82) 0%, rgba(3,3,14,0.55) 45%, transparent 72%);
+  z-index: -1;
+  pointer-events: none;
 }
 @media (min-width: 900px) {
   .motion-hero-content { transform: translateY(-9px); }
@@ -187,19 +223,18 @@ code, pre { font-family: var(--font-mono); }
 }
 .motion-hero-pill:hover { border-color: var(--border-glass); }
 .motion-hero h1 {
-  font-size: 75.84px;
-  font-weight: 200;
-  margin: 0 0 -15.168px;
-  padding-bottom: 15.168px;
-  letter-spacing: -1.5168px;
-  line-height: 83.424px;
+  font-size: clamp(2.75rem, 6vw, 5rem);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  letter-spacing: 0;
+  line-height: 1.3;
 }
 .motion-hero-sub {
-  font-size: 18.08px;
-  color: var(--text-muted);
-  max-width: 32rem;
-  margin: 28.928px auto 2.5rem;
-  line-height: 28.928px;
+  font-size: 1.1rem;
+  color: #b9bbd4;
+  max-width: 34rem;
+  margin: 1.5rem auto 2.5rem;
+  line-height: 2.1;
 }
 .motion-hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; z-index: 1; position: relative; }
 
@@ -233,10 +268,13 @@ code, pre { font-family: var(--font-mono); }
 }
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
-.motion-section { padding: clamp(10rem, 18vw, 18rem) 1.5rem; min-height: 1400px; }
+/* No min-height: it was pinned to 1400px to match a reference page's total
+   body height, which forced every section to that height regardless of content
+   and left ~900px of dead space under each one. Let content drive height. */
+.motion-section { padding: clamp(4rem, 9vw, 7.5rem) 1.5rem; scroll-margin-top: 5rem; }
 .motion-section-alt { background: var(--bg-alt); }
 .motion-section-inner { max-width: 1200px; margin: 0 auto; }
-.motion-canvas-showcase { min-height: 1800px; }
+.motion-canvas-showcase { }
 .motion-canvas-heading { max-width: 720px; margin: 0 auto 4rem; text-align: center; }
 .motion-canvas-heading .motion-section-sub { margin-left: auto; margin-right: auto; }
 .motion-canvas-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
@@ -251,12 +289,12 @@ code, pre { font-family: var(--font-mono); }
 .motion-interaction-row p { color: var(--text-muted); max-width: 36rem; line-height: 1.8; margin: 0 0 1.25rem; }
 .motion-section-title {
   font-family: var(--font-heading);
-  font-weight: 300;
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
   text-align: center;
   margin: 0 auto 1.5rem;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  line-height: 1.4;
+  letter-spacing: 0;
 }
 .motion-section-sub {
   color: var(--text-muted);
@@ -307,7 +345,7 @@ code, pre { font-family: var(--font-mono); }
 .motion-builder {
   display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;
 }
-.motion-builder h3 { font-size: 1.8rem; font-weight: 300; margin: 0 0 0.75rem; line-height: 1.2; }
+.motion-builder h3 { font-size: 1.8rem; font-weight: 700; margin: 0 0 0.75rem; line-height: 1.2; }
 .motion-builder-p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; margin: 0; }
 .motion-code-block {
   background: rgba(255,255,255,0.03);
@@ -334,12 +372,44 @@ code, pre { font-family: var(--font-mono); }
 .motion-features-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
 }
+@media (max-width: 1000px) { .motion-features-grid { grid-template-columns: repeat(2, 1fr); } }
+/* Cards carried no surface of their own — no background, border, or padding —
+   so the icon/title/desc rendered as bare text floating on the page background
+   (the original markup leaned on a full-bleed .motion-feature-img that the
+   Persian rewrite replaced with glyph icons). */
 .motion-feature-card {
-  display: flex; flex-direction: column; gap: 0.5rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+  padding: 1.75rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.4s, transform 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+/* Top edge highlight — reads as a light source above the card */
+.motion-feature-card::before {
+  content: '';
+  position: absolute; inset-inline: 0; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(192,132,252,0.5), transparent);
+  opacity: 0; transition: opacity 0.35s;
+}
+.motion-feature-card:hover { transform: translateY(-4px); }
+.motion-feature-card:hover::before { opacity: 1; }
+
+.motion-feature-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.9rem; height: 2.9rem;
+  border-radius: 14px;
+  font-size: 1.35rem; line-height: 1;
+  color: var(--accent);
+  background: rgba(192,132,252,0.1);
+  border: 1px solid rgba(192,132,252,0.18);
+  flex-shrink: 0;
 }
 .motion-feature-img { width: 100%; border-radius: var(--radius); border: 1px solid var(--border); }
-.motion-feature-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 400; margin: 0; }
-.motion-feature-desc { color: var(--text-muted); font-size: 0.8rem; line-height: 1.7; margin: 0; }
+.motion-feature-title { font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; margin: 0; line-height: 1.5; }
+.motion-feature-desc { color: var(--text-muted); font-size: 0.92rem; line-height: 1.85; margin: 0; }
 @media (max-width: 768px) { .motion-features-grid { grid-template-columns: 1fr; } }
 
 /* ── Canvas section ───────────────────────────────────────────────────────── */
@@ -348,7 +418,7 @@ code, pre { font-family: var(--font-mono); }
 }
 .motion-canvas-visual img { width: 100%; border-radius: var(--radius); border: 1px solid var(--border); }
 .motion-canvas-icon { width: 40px; height: 40px; margin-bottom: 0.5rem; }
-.motion-canvas-text h2 { font-size: 1.8rem; font-weight: 300; margin: 0 0 0.75rem; line-height: 1.2; }
+.motion-canvas-text h2 { font-size: 1.8rem; font-weight: 700; margin: 0 0 0.75rem; line-height: 1.2; }
 .motion-canvas-text p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; margin: 0 0 1.5rem; }
 @media (max-width: 768px) { .motion-canvas-section { grid-template-columns: 1fr; } }
 
@@ -373,7 +443,7 @@ code, pre { font-family: var(--font-mono); }
 .motion-timeline {
   display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;
 }
-.motion-timeline h3 { font-size: 1.6rem; font-weight: 300; margin: 0 0 0.75rem; line-height: 1.2; }
+.motion-timeline h3 { font-size: 1.6rem; font-weight: 700; margin: 0 0 0.75rem; line-height: 1.2; }
 .motion-timeline p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; margin: 0 0 1rem; }
 .motion-timeline .motion-code-block { font-size: 0.85rem; padding: 1.5rem; }
 @media (max-width: 768px) { .motion-timeline { grid-template-columns: 1fr; } }
@@ -394,13 +464,13 @@ code, pre { font-family: var(--font-mono); }
 /* ── Stats ─────────────────────────────────────────────────────────────────- */
 .motion-stats { display: flex; justify-content: center; gap: 4rem; padding: 8rem 2rem; background: var(--bg-alt); }
 .motion-stat { text-align: center; }
-.motion-stat-num { font-family: var(--font-heading); font-size: 2rem; font-weight: 300; }
+.motion-stat-num { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; }
 .motion-stat-label { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.15rem; }
 @media (max-width: 640px) { .motion-stats { gap: 2rem; flex-wrap: wrap; } }
 
 /* ── CTA ─────────────────────────────────────────────────────────────────── */
 .motion-cta { text-align: center; padding: 10rem 2rem; }
-.motion-cta h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 300; margin: 0 0 0.75rem; line-height: 1.15; }
+.motion-cta h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; margin: 0 0 0.75rem; line-height: 1.15; }
 .motion-cta p { color: var(--text-muted); max-width: 24rem; margin: 0 auto 2rem; line-height: 1.8; }
 
 /* ── FAQ ─────────────────────────────────────────────────────────────────── */
@@ -427,7 +497,7 @@ code, pre { font-family: var(--font-mono); }
   .motion-nav-center { display: none; }
   .motion-section { padding: 3rem 1rem; }
   .motion-hero { height: 100svh; min-height: 680px; padding: 72px 1rem 0; }
-  .motion-hero h1 { font-size: clamp(3rem, 14vw, 4.75rem); line-height: 1.05; letter-spacing: -0.04em; margin-bottom: 1rem; padding-bottom: 0; }
+  .motion-hero h1 { font-size: clamp(2rem, 9vw, 3rem); line-height: 1.35; letter-spacing: 0; margin-bottom: 1rem; padding-bottom: 0; }
   .motion-hero-sub { font-size: 1rem; line-height: 1.7; margin-top: 0; }
   .motion-builder { grid-template-columns: 1fr; }
   .motion-features-grid { grid-template-columns: 1fr; }
@@ -562,8 +632,13 @@ code, pre { font-family: var(--font-mono); }
 }
 
 /* ── Smooth section reveal ────────────────────────────────────────────────── */
+/* Deliberately no `will-change: transform` here. It promotes the section to a
+   containing block for fixed-position descendants, which silently breaks the
+   ScrollTrigger pin on the physics cards stage nested inside (the stage scrolled
+   away while its 1800px pin-spacer still reserved the scroll distance, leaving
+   a huge empty band). Same reason the reveal tween below skips pinned sections. */
 .motion-section {
-  will-change: transform, opacity;
+  will-change: opacity;
 }
 .motion-section-alt {
   background: linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
@@ -581,13 +656,20 @@ code, pre { font-family: var(--font-mono); }
 
 .cards-stage .card {
   position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: 0;
+  /* Physical top/left, NOT logical inset-block/inline-start: the matter.js loop
+     writes translate3d() using physical simulation coordinates, so under
+     dir="rtl" a logical start anchor resolves to right:0 and every positive X
+     pushed the cards off the right edge of the stage (section rendered empty). */
+  top: 0;
+  left: 0;
   width: clamp(150px, 20vw, 232px);
   padding: 1.4rem 1.5rem;
-  border: 1px solid var(--border);
+  /* var(--surface)/var(--border) are 3%/8% white — effectively invisible on the
+     near-black page. Give the draggable cards a real surface. */
+  border: 1px solid rgba(255,255,255,0.14);
   border-radius: 18px;
-  background: var(--surface);
+  background: linear-gradient(160deg, rgba(40,32,72,0.92), rgba(18,16,38,0.92));
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   will-change: transform;
@@ -604,7 +686,7 @@ code, pre { font-family: var(--font-mono); }
   font-family: var(--en);
   font-size: 1.05rem;
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   margin: 0 0 0.4rem;
 }
 

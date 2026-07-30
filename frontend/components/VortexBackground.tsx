@@ -81,7 +81,7 @@ void main() {
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
 
   float edgeFade = smoothstep(0.0, 0.16, vHeightNorm) * (1.0 - smoothstep(0.74, 1.0, vHeightNorm));
-  vAlpha = edgeFade * mix(1.0, 0.28, vRadiusNorm);
+  vAlpha = edgeFade * mix(1.0, 0.45, vRadiusNorm);
 
   gl_Position = projectionMatrix * mvPosition;
   gl_PointSize = aSize * uPixelRatio * (34.0 / -mvPosition.z) * mix(1.15, 0.7, vRadiusNorm);
@@ -106,12 +106,14 @@ void main() {
 
   float mixAmt = clamp(vHeightNorm * 0.7 + vRadiusNorm * 0.3, 0.0, 1.0);
   vec3 color = mix(uColorCore, uColorRim, mixAmt);
-  // Warm orange glow at waist (center, low radius)
-  float waistGlow = exp(-pow(vHeightNorm - 0.5, 2.0) * 8.0) * (1.0 - vRadiusNorm);
-  color += vec3(0.8, 0.3, 0.1) * waistGlow * 0.35;
+
+  // Hot magenta bloom at the waist — gives the funnel a readable focal point
+  // instead of an evenly-lit particle field.
+  float waistGlow = exp(-pow(vHeightNorm - 0.5, 2.0) * 7.0) * (1.0 - vRadiusNorm);
+  color += vec3(0.95, 0.35, 0.85) * waistGlow * 0.6;
 
   // Core bright center
-  color += vec3(0.16) * (1.0 - smoothstep(0.0, 0.22, dist)) * (1.0 - vRadiusNorm);
+  color += vec3(0.3) * (1.0 - smoothstep(0.0, 0.24, dist)) * (1.0 - vRadiusNorm * 0.7);
 
   gl_FragColor = vec4(color, mask * vAlpha * uOpacity);
 }
@@ -148,8 +150,10 @@ export default function VortexBackground() {
           0.1,
           120
         )
-        camera.position.set(0, 0.4, 17.5)
-        camera.lookAt(0, 0, 0)
+        // Pulled back and lifted slightly: at z=17.5 the funnel filled the frame
+        // edge-to-edge and read as ambient dust rather than a distinct shape.
+        camera.position.set(0, 1.6, 21.5)
+        camera.lookAt(0, -0.5, 0)
 
         const renderer = new THREE.WebGLRenderer({
           canvas,
@@ -198,11 +202,14 @@ export default function VortexBackground() {
         const uniforms = {
           uTime: { value: 0 },
           uPixelRatio: { value: dpr },
-          uSpin: { value: 0.62 },
+          uSpin: { value: 0.78 },
           uMotion: { value: reducedMotion ? 0.0 : 1.0 },
           uOpacity: { value: 0.0 },
-          uColorCore: { value: new THREE.Color('#8fd6ff') },
-          uColorRim: { value: new THREE.Color('#1a3a5c') }
+          // Brand violet. The previous rim (#1a3a5c) was near-black, so under
+          // additive blending most of the 52k particles blended into the page
+          // background and the funnel read as faint grey dust.
+          uColorCore: { value: new THREE.Color('#f3e4ff') },
+          uColorRim: { value: new THREE.Color('#7c3aed') }
         }
 
         const material = new THREE.ShaderMaterial({

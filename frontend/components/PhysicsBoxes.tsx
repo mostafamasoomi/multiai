@@ -64,11 +64,16 @@ export default function PhysicsBoxes() {
       let walls: any[] = []
       function buildWalls() {
         Composite.remove(world, walls)
+        // Cards spawn above the stage (negative Y, down to roughly -h*5) and
+        // fall in under gravity. The ceiling therefore has to sit above every
+        // spawn point — at the old -WALL/2 it sealed the stage shut and the
+        // cards hung above the section forever instead of dropping in.
+        const CEILING = -1600
         walls = [
-          Bodies.rectangle(width / 2, -WALL / 2, width + WALL * 2, WALL, { isStatic: true }),
+          Bodies.rectangle(width / 2, CEILING - WALL / 2, width + WALL * 2, WALL, { isStatic: true }),
           Bodies.rectangle(width / 2, height + WALL / 2, width + WALL * 2, WALL, { isStatic: true }),
-          Bodies.rectangle(-WALL / 2, height / 2, WALL, height + WALL * 2, { isStatic: true }),
-          Bodies.rectangle(width + WALL / 2, height / 2, WALL, height + WALL * 2, { isStatic: true })
+          Bodies.rectangle(-WALL / 2, height / 2, WALL, (height - CEILING) + WALL * 2, { isStatic: true }),
+          Bodies.rectangle(width + WALL / 2, height / 2, WALL, (height - CEILING) + WALL * 2, { isStatic: true })
         ]
         Composite.add(world, walls)
       }
@@ -238,7 +243,7 @@ export default function PhysicsBoxes() {
       const trigger = ScrollTrigger.create({
         trigger: stage,
         start: 'top top',
-        end: '+=180%',
+        end: '+=90%',
         pin: true,
         scrub: 1.1,
         onUpdate(self: any) {
@@ -294,11 +299,11 @@ export default function PhysicsBoxes() {
   return (
     <section className="motion-section motion-section-alt">
       <div className="motion-section-inner">
-        <span className="motion-eyebrow">MODELS / PHYSICS</span>
-        <h2 className="motion-section-title">Scattered,<br />until they find order</h2>
+        <span className="motion-eyebrow">مدل‌ها</span>
+        <h2 className="motion-section-title">پراکنده،<br />تا وقتی نظم پیدا کنند</h2>
         <p className="motion-section-sub">
-            Drag the cards around. On scroll, they snap into place —
-            exactly what a panel does with your scattered tools.
+          کارت‌ها را جابجا کنید. با اسکرول سر جای خود می‌نشینند —
+          همان کاری که یک پنل با ابزارهای پراکنده شما می‌کند.
         </p>
 
         <div
@@ -318,7 +323,7 @@ export default function PhysicsBoxes() {
             </div>
           ))}
         </div>
-        <p className="stage-hint">Scroll to arrange the cards.</p>
+        <p className="stage-hint">برای مرتب شدن کارت‌ها اسکرول کنید.</p>
       </div>
     </section>
   )
