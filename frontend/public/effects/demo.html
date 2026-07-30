@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MultiAI — Effects Demo</title>
+<style>
+  :root {
+    --bg: #05060f;
+    --bg-alt: #0b0d1a;
+    --text: #eceafc;
+    --text-muted: #9698b3;
+    --accent: #7c3aed;
+    --accent-2: #a855f7;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+  }
+  section { padding: 6rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+
+  /* ── Hero / Vortex Intro ─────────────────────────────────────────── */
+  .hero {
+    min-height: 70vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 1.5rem;
+    background: radial-gradient(ellipse at 50% 30%, rgba(124,58,237,0.18), transparent 60%);
+  }
+  #vortex-canvas { width: min(720px, 90vw); height: 220px; display: block; }
+  .hero p { color: var(--text-muted); max-width: 34rem; font-size: 1.05rem; line-height: 1.7; margin: 0; }
+  .hero button {
+    margin-top: 0.5rem;
+    background: transparent; border: 1px solid var(--border); color: var(--text);
+    padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.85rem; cursor: pointer;
+  }
+  .hero button:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  /* ── 3D box grid ──────────────────────────────────────────────────── */
+  .section-title { text-align: center; font-size: 1.8rem; font-weight: 700; margin: 0 0 0.5rem; }
+  .section-sub { text-align: center; color: var(--text-muted); margin: 0 0 3rem; }
+
+  .box-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2.5rem;
+    perspective: 1200px; /* shared vanishing point for all cards */
+    padding: 2rem 0 40vh; /* extra bottom padding so the last row has room to fully traverse the viewport */
+  }
+  .box3d {
+    --rotate-x: 0deg;
+    --rotate-y: 0deg;
+    --translate-z: 0px;
+    position: relative;
+    height: 220px;
+    border-radius: 18px;
+    background: linear-gradient(160deg, rgba(124,58,237,0.16), rgba(11,13,26,0.9));
+    border: 1px solid var(--border);
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) translateZ(var(--translate-z));
+    /* No CSS transition on transform: hover spring-back and scroll rotation
+       are both driven per-frame by JS (lerp), so a CSS transition here would
+       fight the JS writes instead of complementing them. */
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 1.25rem;
+    cursor: pointer;
+  }
+  .box3d::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(135deg, rgba(168,85,247,0.35), transparent 60%);
+    opacity: 0.5; pointer-events: none;
+  }
+  .box3d h3 { margin: 0 0 0.25rem; font-size: 1.05rem; position: relative; }
+  .box3d p { margin: 0; font-size: 0.85rem; color: var(--text-muted); position: relative; }
+  .box3d .glyph {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    width: 2.5rem; height: 2.5rem; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(168,85,247,0.16); color: var(--accent-2); font-weight: 700;
+  }
+
+  footer { text-align: center; padding: 3rem 1.5rem; color: var(--text-muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+  <section class="hero">
+    <canvas id="vortex-canvas" aria-label="MultiAI"></canvas>
+    <p>یک پلتفرم برای هر مدل هوش مصنوعی — دو افکت خالص Canvas 2D و CSS 3D، بدون هیچ کتابخانه‌ی انیمیشن خارجی.</p>
+    <button id="replay-btn" type="button">Replay intro</button>
+  </section>
+
+  <section>
+    <h2 class="section-title">Scroll + hover</h2>
+    <p class="section-sub">Scroll rotates each card on its Y axis as it crosses the viewport. Hover tilts it toward your cursor, on top of that rotation.</p>
+    <div class="box-grid" id="box-grid">
+      <div class="box3d"><span class="glyph">✦</span><h3>چت چندمدلی</h3><p>بین GPT-4، Claude، Gemini جابجا شوید.</p></div>
+      <div class="box3d"><span class="glyph">◈</span><h3>عامل‌های هوشمند</h3><p>عامل‌های خودمختار با حافظه و ابزار.</p></div>
+      <div class="box3d"><span class="glyph">⇄</span><h3>مقایسه هوشمند</h3><p>کیفیت، سرعت و هزینه را کنار هم ببینید.</p></div>
+      <div class="box3d"><span class="glyph">▣</span><h3>هوش سند</h3><p>PDF آپلود کنید، مدل می‌خواند و پاسخ می‌دهد.</p></div>
+      <div class="box3d"><span class="glyph">⌘</span><h3>API باز</h3><p>endpoint‌های REST سازگار با OpenAI.</p></div>
+      <div class="box3d"><span class="glyph">◌</span><h3>داشبورد مصرف</h3><p>مصرف توکن و هزینه در لحظه.</p></div>
+    </div>
+  </section>
+
+  <footer>MultiAI — vanilla Canvas 2D + CSS 3D, zero dependencies.</footer>
+
+  <script type="module">
+    import VortexIntro from './vortex-intro.js';
+    import Interactive3DBoxes from './interactive-3d-boxes.js';
+
+    const vortex = new VortexIntro();
+    vortex.init(document.getElementById('vortex-canvas'), {
+      text: 'MultiAI',
+      colors: ['#a855f7', '#7c3aed', '#c4b5fd', '#f3e4ff'],
+    });
+    vortex.play();
+
+    document.getElementById('replay-btn').addEventListener('click', () => vortex.play());
+
+    const boxes = new Interactive3DBoxes();
+    boxes.init('#box-grid', {
+      hoverTiltDeg: 10,
+      scrollRotationDeg: 360,
+      translateZMax: 40,
+    });
+
+    // Demonstrates safe teardown, e.g. on client-side route change in an SPA.
+    window.addEventListener('pagehide', () => {
+      vortex.destroy();
+      boxes.destroy();
+    });
+  </script>
+</body>
+</html>
